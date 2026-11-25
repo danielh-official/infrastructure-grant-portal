@@ -1,0 +1,46 @@
+:root {
+    color: #183044;
+    background: #f4f7f8;
+    font: 100%/1.55 system-ui, sans-serif;
+}
+* { box-sizing: border-box; }
+body { margin: 0; }
+.shell { width: min(70rem, calc(100% - 3rem)); margin-inline: auto; }
+.site-header { position: sticky; top: 0; z-index: 1; background: #12394d; color: white; }
+.site-header .shell { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; min-height: 4.5rem; padding-block: .8rem; gap: .5rem 1rem; }
+.site-header a { color: white; }
+.brand { font-weight: 750; text-decoration: none; }
+nav { display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; }
+a, .help-trigger { color: #14556a; }
+.intro { border-block-end: 3px solid #256977; padding-block: 2.5rem 1.25rem; margin-block-end: 1.5rem; }
+h1, h2, h3, h4 { line-height: 1.2; }
+h1 { font: 700 clamp(1.8rem, 4vw, 3rem)/1.1 Georgia, serif; margin: 0; }
+h2, h3, h4 { margin-block-start: 0; }
+.intro p { max-width: 42rem; margin-block-end: 0; }
+.columns { display: grid; grid-template-columns: minmax(0, 2fr) minmax(13rem, 1fr); gap: 1.5rem; align-items: start; }
+.application, aside section { border: 1px solid #c1d0d6; background: white; padding: 1.4rem; }
+aside section + section { margin-top: 1rem; }
+.field { margin-block: 1.25rem; }
+label, .field-label { display: block; font-weight: 700; }
+input, textarea, button { font: inherit; }
+input, textarea { display: block; width: 100%; border: 1px solid #657c86; border-radius: .2rem; padding: .55rem .65rem; }
+textarea { resize: vertical; }
+.hint { color: #949ca1; margin-block: .2rem .4rem; }
+.error { margin-block: .25rem 0; color: #9c2923; }
+.error:empty { display: none; }
+button { padding: .55rem 1rem; border: 1px solid #14556a; border-radius: .2rem; background: #14556a; color: white; cursor: pointer; }
+button:disabled { opacity: .7; cursor: wait; }
+.help-trigger { text-decoration: underline; cursor: pointer; }
+.support-links { display: flex; gap: 2px; }
+.support-links a { display: inline-block; font-size: .75rem; line-height: 14px; }
+:focus-visible { outline: 3px solid #aa4a13; outline-offset: 3px; }
+.site-header :focus-visible { outline-color: #ffcb80; }
+#receipt { border-left: 4px solid #256977; padding: .5rem .75rem; background: #e6f3ef; }
+dialog { width: min(26rem, 100% - 2rem); border: 1px solid #657c86; color: inherit; padding: 1.5rem; }
+dialog::backdrop { background: #122b3bb0; }
+footer { padding-block: 2rem; min-height: 8rem; }
+@media (max-width: 43rem) {
+    .columns { grid-template-columns: 1fr; }
+    .shell { width: calc(100% - 2rem); }
+    .intro { padding-block-start: 2rem; }
+}
