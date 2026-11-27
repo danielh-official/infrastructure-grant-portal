@@ -25,14 +25,54 @@ async function tabTo(page, locator, maxTabs = 30) {
     await expect(locator).toBeFocused();
 }
 
-// Focus must land somewhere useful: an invalid field, or one element (e.g. an error summary) holding every message.
+// Focus must land somewhere useful: a field showing its own error, or one element (e.g. an error summary) holding every message.
+// Reads visible error text only, so it stays independent of how fields are marked for assistive tech.
 function focusIdentifiesFailure(page, expected) {
     return page.evaluate((expected) => {
         const focused = document.activeElement;
         if (!focused || focused === document.body || focused === document.documentElement) return false;
-        return focused.matches('[aria-invalid="true"]')
+        const ownError = focused.name && document.querySelector(`[data-error="${focused.name}"]`);
+        return Boolean(ownError?.checkVisibility() && ownError.textContent.trim())
             || expected.every(message => focused.textContent.includes(message));
     }, expected);
+}
+
+const escapeRegExp = text => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+// Valid municipality, malformed email, empty summary, submitted by keyboard.
+async function submitPartlyInvalid(page) {
+    const fields = {
+        municipality: page.getByLabel('Municipality'),
+        email: page.getByLabel('Contact email'),
+        summary: page.getByLabel('Project summary'),
+    };
+    await fields.municipality.fill('Example Township');
+    await fields.email.fill('not-an-email');
+    await page.getByRole('button', { name: 'Submit application' }).focus();
+    await page.keyboard.press('Enter');
+    await expect(page.getByText(messages.emailFormat)).toBeVisible();
+    return fields;
+}
+
+async function expectEachInvalidFieldIdentified({ municipality, email, summary }) {
+    await expect(email).toHaveAttribute('aria-invalid', 'true');
+    await expect(email).toHaveAccessibleDescription(new RegExp(escapeRegExp(messages.emailFormat)));
+    await expect(summary).toHaveAttribute('aria-invalid', 'true');
+    await expect(summary).toHaveAccessibleDescription(new RegExp(escapeRegExp(messages.summary)));
+    await expect(municipality).not.toHaveAttribute('aria-invalid', 'true');
+}
+
+async function expectValuesKept({ municipality, email }) {
+    await expect(municipality).toHaveValue('Example Township');
+    await expect(email).toHaveValue('not-an-email');
+}
+
+async function correctAndResubmit(page, { email, summary }) {
+    await email.fill('clerk@example.org');
+    await summary.fill('Replace failing culverts on two municipal roads.');
+    await page.getByRole('button', { name: 'Submit application' }).focus();
+    await page.keyboard.press('Enter');
+    await expect(page.locator('#receipt')).toHaveText(/Application received. Reference #\d+\./);
 }
 
 test.beforeEach(async ({ page }) => {
@@ -62,74 +102,54 @@ test('the municipality field exposes its visible name and is announced when reac
 });
 
 // A-02, JavaScript path
-test('invalid submission moves focus to either the error summary or an invalid field', async ({ page }) => {
-    const submit = page.getByRole('button', { name: 'Submit application' });
-    await submit.focus();
-    await page.keyboard.press('Enter');
-    await expect(page.getByText(messages.email)).toBeVisible();
-    await expect.poll(() => focusIdentifiesFailure(page, [messages.municipality, messages.email, messages.summary])).toBe(true);
-});
+test.describe('A-02 JavaScript path', () => {
+    test('invalid submission moves focus to either the error summary or an invalid field', async ({ page }) => {
+        const submit = page.getByRole('button', { name: 'Submit application' });
+        await submit.focus();
+        await page.keyboard.press('Enter');
+        await expect(page.getByText(messages.email)).toBeVisible();
+        await expect.poll(() => focusIdentifiesFailure(page, [messages.municipality, messages.email, messages.summary])).toBe(true);
+    });
 
-test('JavaScript path: each invalid field is identified, values are kept, and a corrected form resubmits', async ({ page }) => {
-    const municipality = page.getByLabel('Municipality');
-    const email = page.getByLabel('Contact email');
-    const summary = page.getByLabel('Project summary');
-    await municipality.fill('Example Township');
-    await email.fill('not-an-email');
-    await page.getByRole('button', { name: 'Submit application' }).focus();
-    await page.keyboard.press('Enter');
+    test('each invalid field is identified and valid fields are not', async ({ page }) => {
+        await expectEachInvalidFieldIdentified(await submitPartlyInvalid(page));
+    });
 
-    await expect(email).toHaveAttribute('aria-invalid', 'true');
-    await expect(email).toHaveAccessibleDescription(new RegExp(messages.emailFormat.replace('.', '\\.')));
-    await expect(summary).toHaveAttribute('aria-invalid', 'true');
-    await expect(summary).toHaveAccessibleDescription(new RegExp(messages.summary));
-    await expect(municipality).not.toHaveAttribute('aria-invalid', 'true');
-    await expect.poll(() => focusIdentifiesFailure(page, [messages.emailFormat, messages.summary])).toBe(true);
-    await expect(municipality).toHaveValue('Example Township');
-    await expect(email).toHaveValue('not-an-email');
+    test('previously entered values are kept', async ({ page }) => {
+        await expectValuesKept(await submitPartlyInvalid(page));
+    });
 
-    await email.fill('clerk@example.org');
-    await summary.fill('Replace failing culverts on two municipal roads.');
-    await page.getByRole('button', { name: 'Submit application' }).focus();
-    await page.keyboard.press('Enter');
-    await expect(page.locator('#receipt')).toHaveText(/Application received. Reference #\d+\./);
-    for (const field of [municipality, email, summary]) {
-        await expect(field).not.toHaveAttribute('aria-invalid', 'true');
-    }
+    test('a corrected form resubmits and clears the invalid state', async ({ page }) => {
+        const fields = await submitPartlyInvalid(page);
+        await correctAndResubmit(page, fields);
+        for (const field of Object.values(fields)) {
+            await expect(field).not.toHaveAttribute('aria-invalid', 'true');
+        }
+    });
 });
 
 // A-02, native form path
-test('native path: errors are signalled on load, each invalid field is identified, values are kept', async ({ browser, baseURL }) => {
-    const context = await browser.newContext({ baseURL, javaScriptEnabled: false });
-    try {
-        const page = await context.newPage();
-        await page.goto('/apply');
-        const municipality = page.getByLabel('Municipality');
-        const email = page.getByLabel('Contact email');
-        const summary = page.getByLabel('Project summary');
-        await municipality.fill('Example Township');
-        await email.fill('not-an-email');
-        await page.getByRole('button', { name: 'Submit application' }).focus();
-        await page.keyboard.press('Enter');
+test.describe('A-02 native form path', () => {
+    test.use({ javaScriptEnabled: false });
 
-        // ponytail: without JS, focus can't move, so the reloaded title is what a screen reader hears first.
+    // ponytail: without JS, focus can't move, so the reloaded title is what a screen reader hears first.
+    test('the reloaded page title signals the error', async ({ page }) => {
+        await submitPartlyInvalid(page);
         await expect(page).toHaveTitle(/^Error/i);
-        await expect(email).toHaveAttribute('aria-invalid', 'true');
-        await expect(email).toHaveAccessibleDescription(new RegExp(messages.emailFormat.replace('.', '\\.')));
-        await expect(summary).toHaveAttribute('aria-invalid', 'true');
-        await expect(summary).toHaveAccessibleDescription(new RegExp(messages.summary));
-        await expect(municipality).not.toHaveAttribute('aria-invalid', 'true');
-        await expect(municipality).toHaveValue('Example Township');
-        await expect(email).toHaveValue('not-an-email');
+    });
 
-        await email.fill('clerk@example.org');
-        await summary.fill('Replace failing culverts on two municipal roads.');
-        await page.getByRole('button', { name: 'Submit application' }).click();
-        await expect(page.locator('#receipt')).toHaveText(/Application received. Reference #\d+\./);
+    test('each invalid field is identified and valid fields are not', async ({ page }) => {
+        await expectEachInvalidFieldIdentified(await submitPartlyInvalid(page));
+    });
+
+    test('previously entered values are kept', async ({ page }) => {
+        await expectValuesKept(await submitPartlyInvalid(page));
+    });
+
+    test('a corrected form resubmits and clears the error title', async ({ page }) => {
+        await correctAndResubmit(page, await submitPartlyInvalid(page));
         await expect(page).not.toHaveTitle(/^Error/i);
-    } finally {
-        await context.close();
-    }
+    });
 });
 
 // A-03
