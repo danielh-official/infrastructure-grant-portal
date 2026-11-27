@@ -51,10 +51,10 @@
             </form>
         </section>
         <aside aria-label="Applicant information">
-            <section>
+            <section id="before-you-apply">
                 <h4 id="requirements">Before you apply</h4>
                 <p>Check whether your project fits the program before you submit.</p>
-                <span class="help-trigger" data-help>Open eligibility guide</span>
+                <button class="help-trigger" data-help style="color:white;text-decoration:none;">Open eligibility guide</button>
             </section>
             <section id="contact">
                 <h3>Contact the program office</h3>
