@@ -8,6 +8,7 @@
     <script src="/portal.js" defer></script>
 </head>
 <body>
+<a role="link" href="#main" class="skip">Skip to main content</a>
 <header class="site-header">
     <div class="shell">
         <a class="brand" href="/apply">Infrastructure Grant Portal</a>
@@ -18,7 +19,7 @@
         </nav>
     </div>
 </header>
-<main class="shell" id="main">
+<main class="shell" id="main" tabindex="-1">
     <div class="intro">
         <h1>Apply for infrastructure funding</h1>
         <p>Submit a preliminary request for municipal water, road, or public facility improvements.</p>
@@ -51,7 +52,7 @@
         </section>
         <aside aria-label="Applicant information">
             <section>
-                <h4 id="requirements" tabindex="-1">Before you apply</h4>
+                <h4 id="requirements">Before you apply</h4>
                 <p>Check whether your project fits the program before you submit.</p>
                 <span class="help-trigger" data-help>Open eligibility guide</span>
             </section>

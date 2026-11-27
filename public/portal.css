@@ -44,3 +44,4 @@ footer { padding-block: 2rem; min-height: 8rem; }
     .shell { width: calc(100% - 2rem); }
     .intro { padding-block-start: 2rem; }
 }
+.skip { position: absolute; left: -10000px; top: auto; width: 1px; height: 1px; overflow: hidden; }
