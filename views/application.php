@@ -51,8 +51,8 @@
             </form>
         </section>
         <aside aria-label="Applicant information">
-            <section id="before-you-apply">
-                <h4 id="requirements">Before you apply</h4>
+            <section id="requirements" tabindex="-1">
+                <h4>Before you apply</h4>
                 <p>Check whether your project fits the program before you submit.</p>
                 <button class="help-trigger" data-help style="color:white;text-decoration:none;">Open eligibility guide</button>
             </section>

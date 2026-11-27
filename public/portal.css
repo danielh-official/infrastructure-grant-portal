@@ -19,6 +19,7 @@ h2, h3, h4 { margin-block-start: 0; }
 .intro p { max-width: 42rem; margin-block-end: 0; }
 .columns { display: grid; grid-template-columns: minmax(0, 2fr) minmax(13rem, 1fr); gap: 1.5rem; align-items: start; }
 .application, aside section { border: 1px solid #c1d0d6; background: white; padding: 1.4rem; }
+#requirements { scroll-margin-top: 8rem; }
 aside section + section { margin-top: 1rem; }
 .field { margin-block: 1.25rem; }
 label, .field-label { display: block; font-weight: 700; }
