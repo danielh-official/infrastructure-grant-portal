@@ -31,17 +31,17 @@
             <p id="receipt" <?= $reference === null ? 'hidden' : '' ?>><?= $reference === null ? '' : 'Application received. Reference #' . (int) $reference . '.' ?></p>
             <form action="/apply" method="post" novalidate>
                 <div class="field">
-                    <label for="municipality" class="field-label">Municipality</label>
+                    <label for="municipality">Municipality</label>
                     <input id="municipality" name="municipality" value="<?= escape($input->values['municipality']) ?>">
                     <p class="error" data-error="municipality"><?= escape($errors['municipality'] ?? '') ?></p>
                 </div>
                 <div class="field">
-                    <label for="email" class="field-label">Contact email</label>
+                    <label for="email">Contact email</label>
                     <input id="email" type="email" name="email" autocomplete="email" value="<?= escape($input->values['email']) ?>">
                     <p class="error" data-error="email"><?= escape($errors['email'] ?? '') ?></p>
                 </div>
                 <div class="field">
-                    <label for="summary" class="field-label">Project summary</label>
+                    <label for="summary">Project summary</label>
                     <p class="hint">Include the proposed work and who it will serve.</p>
                     <textarea id="summary" name="summary" rows="5"><?= escape($input->values['summary']) ?></textarea>
                     <p class="error" data-error="summary"><?= escape($errors['summary'] ?? '') ?></p>
